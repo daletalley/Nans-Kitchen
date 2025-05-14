@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nan's Kitchen</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fff8f7;
+      color: #2d1313;
+    }
+    header {
+      background: #b22222;
+      color: white;
+      padding: 32px 20px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: 1.2px;
+      border-bottom: 4px solid #8b0000;
+      box-shadow: 0 4px 16px rgba(178,34,34,0.07);
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 1.5px;
+      text-shadow: 0 2px 8px rgba(139,0,0,0.08);
+    }
+    header p {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 500;
+      opacity: 0.92;
+      letter-spacing: 0.8px;
+    }
+    main {
+      padding: 32px 20px;
+      max-width: 980px;
+      margin: auto;
+    }
+    h2 {
+      color: #8b0000;
+      margin-bottom: 18px;
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: 0.6px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: #b22222;
+      letter-spacing: 0.4px;
+    }
+    input, textarea, button, select {
+      width: 100%;
+      padding: 11px 14px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: 1.5px solid #e0b4b4;
+      font-size: 17px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      transition: border-color 0.3s cubic-bezier(.4,0,.2,1);
+      box-shadow: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: #b22222;
+      outline: none;
+      background: #fff5f3;
+    }
+    button {
+      background: linear-gradient(90deg, #b22222 60%, #8b0000 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1.08rem;
+      letter-spacing: 0.6px;
+      box-shadow: 0 2px 8px rgba(178,34,34,0.07);
+      transition: background 0.25s, box-shadow 0.2s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #8b0000 70%, #b22222 100%);
+      box-shadow: 0 4px 12px rgba(139,0,0,0.13);
+    }
+    button.danger {
+      background: linear-gradient(90deg, #c0392b 60%, #8b0000 100%);
+    }
+    button.danger:hover {
+      background: linear-gradient(90deg, #922b21 75%, #b22222 100%);
+    }
+    .recipe-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+      margin-top: 32px;
+    }
+    .card {
+      background: #fffafa;
+      border-radius: 14px;
+      padding: 24px 26px 20px 26px;
+      box-shadow: 0 6px 20px rgba(178,34,34,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: box-shadow 0.3s ease, border-color 0.3s;
+      border: 1.7px solid transparent;
+      position: relative;
+    }
+    .card:hover {
+      box-shadow: 0 8px 28px rgba(139,0,0,0.18);
+      border-color: #b22222;
+    }
+    .card img {
+      width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1.5px solid #e0b4b4;
+      box-shadow: 0 2px 8px rgba(178,34,34,0.07);
+    }
+    .card h3 {
+      margin: 0;
+      color: #b22222;
+      font-weight: 800;
+      font-size: 1.35rem;
+      border-bottom: 1.5px solid #f2c9c9;
+      padding-bottom: 8px;
+      letter-spacing: 0.7px;
+    }
+    .card p {
+      margin: 5px 0;
+      line-height: 1.5;
+      color: #7b2323;
+      font-size: 1.01rem;
+    }
+    .card textarea {
+      resize: vertical;
+      min-height: 60px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 1rem;
+      padding: 10px 12px;
+      border-radius: 7px;
+      border: 1.5px solid #e0b4b4;
+      transition: border-color 0.3s;
+      background: #fff7f7;
+    }
+    .card textarea:focus {
+      border-color: #b22222;
+      outline: none;
+      background: #fff3f0;
+    }
+    #search {
+      margin-bottom: 26px;
+      padding: 13px 18px;
+      font-size: 17px;
+      border-radius: 10px;
+      border: 1.5px solid #e0b4b4;
+      width: 100%;
+      max-width: 400px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      transition: border-color 0.3s;
+      background: #fff9f8;
+    }
+    #search:focus {
+      border-color: #b22222;
+      outline: none;
+      background: #fff5f3;
+    }
+    .suggestions {
+      background: white;
+      border: 1.5px solid #e0b4b4;
+      border-radius: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      box-shadow: 0 4px 12px rgba(178,34,34,0.09);
+    }
+    .suggestion-item {
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background-color 0.18s;
+      font-size: 1rem;
+      color: #b22222;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .suggestion-item:hover {
+      background: #faeaea;
+    }
+    .card > div[style] button {
+      flex: 1;
+      padding: 9px 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.25s;
+      background: linear-gradient(90deg, #b22222 60%, #8b0000 100%);
+      color: white;
+      font-size: 1.02rem;
+      box-shadow: 0 2px 8px rgba(178,34,34,0.07);
+    }
+    .card > div[style] button.danger {
+      background: linear-gradient(90deg, #c0392b 60%, #8b0000 100%);
+    }
+    .card > div[style] button:hover {
+      filter: brightness(0.96);
+      background: linear-gradient(90deg, #8b0000 70%, #b22222 100%);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Nan’s Kitchen</h1>
+    <p>For generations of love and food</p>
+  </header>
+  <main>
+    <input id="search" type="text" placeholder="Search recipes..." oninput="handleSearch(this.value)" />
+    <div class="suggestions" id="suggestions"></div>
+    <section>
+      <h2>Add New Recipe</h2>
+      <div class="form-group"><label>Title</label><input id="title" /></div>
+      <div class="form-group">
+        <label>Image</label>
+        <input type="file" id="image" accept="image/*" />
+        <img id="image-preview" style="display:none;max-width:180px;margin-top:8px;border-radius:6px;"/>
+      </div>
+      <div class="form-group"><label>Tags (comma-separated)</label><input id="tags" /></div>
+      <div class="form-group">
+        <label>Ingredients</label>
+        <div id="ingredients-list"></div>
+        <button type="button" onclick="addIngredientRow()">Add Ingredient</button>
+      </div>
+      <div class="form-group"><label>Steps</label><textarea id="steps" placeholder="One per line..."></textarea></div>
+      <button onclick="addRecipe()">Add Recipe</button>
+    </section>
+    <section>
+      <h2>Recipes</h2>
+      <div class="recipe-list" id="recipeList"></div>
+    </section>
+  </main>
+  <script>
+    // Ingredient row utilities
+    function addIngredientRow(containerId) {
+      const unitOptions = [
+        "g", "kg", "tsp", "tbsp", "cup", "oz", "lb", "ml", "l", "pinch", "pcs", "slice", "clove", "can", "quart"
+      ];
+      const container = containerId
+        ? document.getElementById(containerId)
+        : document.getElementById('ingredients-list');
+      const div = document.createElement('div');
+      div.className = 'ingredient-row';
+      div.style.display = 'flex';
+      div.style.gap = '8px';
+      div.style.marginBottom = '6px';
+      div.innerHTML = `
+        <input class="ingredient-name" type="text" style="flex:2" placeholder="Ingredient"/>
+        <select class="ingredient-unit" style="flex:1">
+          ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
+        </select>
+      `;
+      container.appendChild(div);
+    }
+    const recipeList = document.getElementById('recipeList');
+    const suggestions = document.getElementById('suggestions');
+    const searchInput = document.getElementById('search');
+
+    const seedRecipes = [
+      {
+        title: "Fluffy Pancakes",
+        image: "https://www.allrecipes.com/thmb/L7yYPDCicVZ5OPb8xZ8q8b7GlX0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/21014-GoodOldFashionedPancakes-mfs-74-1x1-1-b82378b82e4e44f7b1e4c9241b5cfddc.jpg",
+        tags: ["breakfast", "quick"],
+        ingredients: "Flour\nEggs\nMilk\nBaking powder\nSugar",
+        steps: "Mix ingredients\nPour on griddle\nFlip and serve",
+        note: ""
+      },
+      {
+        title: "Spaghetti Bolognese",
+        image: "",
+        tags: ["dinner", "italian"],
+        ingredients: "Spaghetti\nGround beef\nTomato sauce\nGarlic\nOnion",
+        steps: "Boil pasta\nCook beef\nMix with sauce\nCombine and serve",
+        note: ""
+      }
+    ];
+
+    function getRecipes() {
+      const data = JSON.parse(localStorage.getItem('recipes') || '[]');
+      return data.length === 0 ? seedRecipes : data;
+    }
+
+    function saveRecipes(data) {
+      localStorage.setItem('recipes', JSON.stringify(data));
+    }
+
+    // Drag-and-drop state
+    let draggedIndex = null;
+
+    function handleDragStart(e) {
+      draggedIndex = +e.currentTarget.dataset.index;
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+
+    function handleDrop(e) {
+      const droppedIndex = +e.currentTarget.dataset.index;
+      if (draggedIndex === null || draggedIndex === droppedIndex) return;
+      const recipes = getRecipes();
+      const [moved] = recipes.splice(draggedIndex, 1);
+      recipes.splice(droppedIndex, 0, moved);
+      saveRecipes(recipes);
+      renderRecipes();
+    }
+
+    function renderRecipes(filter = '') {
+      const recipes = getRecipes();
+      recipeList.innerHTML = '';
+      const filtered = recipes.filter(r =>
+        r.title.toLowerCase().includes(filter) ||
+        r.tags.join(',').toLowerCase().includes(filter) ||
+        r.ingredients.toLowerCase().includes(filter)
+      );
+      filtered.forEach((r, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = true;
+        card.dataset.index = i;
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.innerHTML = `
+          ${r.image ? `<img src="${r.image}" alt="${r.title}">` : ''}
+          <h3>${r.title}</h3>
+          <p><strong>Tags:</strong> ${r.tags.join(', ')}</p>
+          <p><strong>Ingredients:</strong><br>${r.ingredients.replace(/\n/g, "<br>")}</p>
+          <p><strong>Steps:</strong><br>${r.steps.replace(/\n/g, "<br>")}</p>
+          <textarea placeholder="Notes..." oninput="saveNote(${i}, this.value)">${r.note}</textarea>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <button onclick="editRecipe(${i})">Edit</button>
+            <button onclick="deleteRecipe(${i})" class="danger">Delete</button>
+          </div>
+        `;
+        recipeList.appendChild(card);
+      });
+    }
+
+    function addRecipe() {
+      const title = document.getElementById('title').value.trim();
+      const image = document.getElementById('image').dataset.url ? document.getElementById('image').dataset.url : "";
+      const tags = document.getElementById('tags').value.trim().split(',').map(x => x.trim()).filter(Boolean);
+      // Parse dynamic ingredients
+      const ingredientsArr = [];
+      document.querySelectorAll('#ingredients-list .ingredient-row').forEach(row => {
+        const name = row.querySelector('.ingredient-name').value.trim();
+        const unit = row.querySelector('.ingredient-unit').value;
+        if (name) ingredientsArr.push(`${name} [${unit}]`);
+      });
+      const ingredients = ingredientsArr.join('\n');
+      const steps = document.getElementById('steps').value.trim();
+
+      if (!title) return alert("Title required.");
+
+      const recipes = getRecipes();
+      recipes.push({ title, image, tags, ingredients, steps, note: "" });
+      saveRecipes(recipes);
+      renderRecipes();
+      document.getElementById('title').value = '';
+      document.getElementById('image').value = '';
+      document.getElementById('image').dataset.url = '';
+      document.getElementById('image-preview').style.display = 'none';
+      document.getElementById('tags').value = '';
+      // Reset ingredients rows
+      document.getElementById('ingredients-list').innerHTML = '';
+      addIngredientRow();
+      document.getElementById('steps').value = '';
+    }
+
+    function deleteRecipe(index) {
+      if (!confirm("Delete this recipe?")) return;
+      const recipes = getRecipes();
+      recipes.splice(index, 1);
+      saveRecipes(recipes);
+      renderRecipes();
+    }
+
+    function moveRecipeUp(index) {
+      const recipes = getRecipes();
+      if (index > 0) {
+        [recipes[index - 1], recipes[index]] = [recipes[index], recipes[index - 1]];
+        saveRecipes(recipes);
+        renderRecipes();
+      }
+    }
+
+    function moveRecipeDown(index) {
+      const recipes = getRecipes();
+      if (index < recipes.length - 1) {
+        [recipes[index], recipes[index + 1]] = [recipes[index + 1], recipes[index]];
+        saveRecipes(recipes);
+        renderRecipes();
+      }
+    }
+
+    function editRecipe(index) {
+      const unitOptions = [
+        "g", "kg", "tsp", "tbsp", "cup", "oz", "lb", "ml", "l", "pinch", "pcs", "slice", "clove", "can", "quart"
+      ];
+      const recipes = getRecipes();
+      const r = recipes[index];
+      const card = recipeList.children[index];
+      // Parse ingredients as [{name, unit}]
+      let ingredientRows = "";
+      const ingredientLines = r.ingredients.split('\n').filter(Boolean);
+      ingredientLines.forEach((line, idx) => {
+        // Try to extract unit in [unit] at end
+        const match = line.match(/^(.*)\s*\[([^\]]+)\]$/);
+        let name = line, unit = "";
+        if (match) {
+          name = match[1].trim();
+          unit = match[2].trim();
+        }
+        ingredientRows += `
+          <div class="ingredient-row" style="display:flex;gap:8px;margin-bottom:6px">
+            <input class="ingredient-name" type="text" value="${name.replace(/"/g, "&quot;")}" style="flex:2" placeholder="Ingredient"/>
+            <select class="ingredient-unit" style="flex:1">
+              ${unitOptions.map(u => `<option value="${u}"${u===unit?' selected':''}>${u}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      });
+      if (!ingredientRows) {
+        ingredientRows = `
+          <div class="ingredient-row" style="display:flex;gap:8px;margin-bottom:6px">
+            <input class="ingredient-name" type="text" style="flex:2" placeholder="Ingredient"/>
+            <select class="ingredient-unit" style="flex:1">
+              ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      }
+      card.innerHTML = `
+        <input value="${r.title.replace(/"/g, "&quot;")}" id="edit-title-${index}" />
+        <div>
+          <input type="file" id="edit-image-${index}" accept="image/*" />
+          <img id="edit-image-preview-${index}" style="display:${r.image?'block':'none'};max-width:140px;margin-top:6px;border-radius:6px;" ${r.image?`src="${r.image}"`:''}/>
+        </div>
+        <input value="${r.tags.join(', ').replace(/"/g, "&quot;")}" id="edit-tags-${index}" />
+        <div id="edit-ingredients-list-${index}">
+          ${ingredientRows}
+        </div>
+        <button type="button" onclick="addIngredientRow('edit-ingredients-list-${index}')">Add Ingredient</button>
+        <textarea id="edit-steps-${index}">${r.steps}</textarea>
+        <textarea placeholder="Notes..." oninput="saveNote(${index}, this.value)">${r.note}</textarea>
+        <button onclick="saveEditedRecipe(${index})">Save</button>
+        <button class="danger" onclick="deleteRecipe(${index})">Delete</button>
+      `;
+      // Setup image upload for edit
+      const imgInput = card.querySelector(`#edit-image-${index}`);
+      const imgPreview = card.querySelector(`#edit-image-preview-${index}`);
+      imgInput.onchange = function(e) {
+        if (this.files && this.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            imgPreview.src = ev.target.result;
+            imgPreview.style.display = 'block';
+            imgInput.dataset.url = ev.target.result;
+          };
+          reader.readAsDataURL(this.files[0]);
+        }
+      };
+    }
+
+    function saveEditedRecipe(index) {
+      const title = document.getElementById(`edit-title-${index}`).value.trim();
+      // Prefer new uploaded image if present
+      const imgInput = document.getElementById(`edit-image-${index}`);
+      const image = imgInput && imgInput.dataset.url ? imgInput.dataset.url : (imgInput && imgInput.value ? imgInput.value : "");
+      const tags = document.getElementById(`edit-tags-${index}`).value.trim().split(',').map(x => x.trim()).filter(Boolean);
+      // Parse dynamic ingredient rows
+      const ingredientsArr = [];
+      const ingList = document.getElementById(`edit-ingredients-list-${index}`);
+      ingList.querySelectorAll('.ingredient-row').forEach(row => {
+        const name = row.querySelector('.ingredient-name').value.trim();
+        const unit = row.querySelector('.ingredient-unit').value;
+        if (name) ingredientsArr.push(`${name} [${unit}]`);
+      });
+      const ingredients = ingredientsArr.join('\n');
+      const steps = document.getElementById(`edit-steps-${index}`).value.trim();
+
+      if (!title) return alert("Title is required.");
+
+      const recipes = getRecipes();
+      recipes[index] = { ...recipes[index], title, image, tags, ingredients, steps };
+      saveRecipes(recipes);
+      renderRecipes();
+    }
+
+    function saveNote(index, val) {
+      const recipes = getRecipes();
+      recipes[index].note = val;
+      saveRecipes(recipes);
+    }
+
+    function handleSearch(value) {
+      const val = value.toLowerCase();
+      renderRecipes(val);
+      const all = getRecipes();
+      const matches = new Set();
+      all.forEach(r => {
+        r.tags.forEach(tag => tag.toLowerCase().includes(val) && matches.add(tag));
+        r.title.toLowerCase().includes(val) && matches.add(r.title);
+        r.ingredients.toLowerCase().includes(val) && matches.add(...r.ingredients.split('\n').filter(x => x.toLowerCase().includes(val)));
+      });
+      suggestions.innerHTML = '';
+      [...matches].forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        item.textContent = m;
+        item.onclick = () => {
+          searchInput.value = m;
+          renderRecipes(m.toLowerCase());
+          suggestions.innerHTML = '';
+        };
+        suggestions.appendChild(item);
+      });
+    }
+
+    renderRecipes();
+
+    // Setup initial dynamic ingredients UI and image upload preview
+    document.addEventListener('DOMContentLoaded', function() {
+      // Remove legacy textarea if present
+      const ingList = document.getElementById('ingredients-list');
+      if (ingList && ingList.children.length === 0) {
+        addIngredientRow();
+      }
+      // Image upload for add
+      const imgInput = document.getElementById('image');
+      const imgPreview = document.getElementById('image-preview');
+      imgInput.onchange = function(e) {
+        if (this.files && this.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            imgPreview.src = ev.target.result;
+            imgPreview.style.display = 'block';
+            imgInput.dataset.url = ev.target.result;
+          };
+          reader.readAsDataURL(this.files[0]);
+        }
+      };
+    });
+  </script>
+</body>
+</html>
