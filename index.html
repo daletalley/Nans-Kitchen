@@ -233,6 +233,11 @@
   <main>
     <input id="search" type="text" placeholder="Search recipes..." oninput="handleSearch(this.value)" />
     <div class="suggestions" id="suggestions"></div>
+    <div style="display:flex;gap:10px;margin-bottom:22px;">
+      <button id="export-btn" type="button">Export All</button>
+      <button id="import-btn" type="button">Import</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none"/>
+    </div>
     <section>
       <h2>Add New Recipe</h2>
       <div class="form-group"><label>Title</label><input id="title" /></div>
@@ -254,6 +259,14 @@
       <h2>Recipes</h2>
       <div class="recipe-list" id="recipeList"></div>
     </section>
+    <!-- QR Code Modal -->
+    <div id="qr-modal" style="display:none;position:fixed;z-index:1000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);justify-content:center;align-items:center;">
+      <div style="background:#fff;padding:30px 32px 22px 32px;border-radius:14px;box-shadow:0 6px 32px rgba(0,0,0,0.13);min-width:260px;min-height:180px;position:relative;text-align:center;">
+        <button id="qr-modal-close" style="position:absolute;top:8px;right:12px;font-size:1.2rem;padding:4px 12px;background:#b22222;color:#fff;border:none;border-radius:6px;cursor:pointer;">&times;</button>
+        <h3 style="margin-top:0;color:#b22222;font-size:1.2rem;">Share Recipe QR Code</h3>
+        <div id="qr-modal-content"></div>
+      </div>
+    </div>
   </main>
   <script>
     // Ingredient row utilities
@@ -346,6 +359,7 @@
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragover', handleDragOver);
         card.addEventListener('drop', handleDrop);
+        // Share button with dropdown
         card.innerHTML = `
           ${r.image ? `<img src="${r.image}" alt="${r.title}">` : ''}
           <h3>${r.title}</h3>
@@ -353,14 +367,200 @@
           <p><strong>Ingredients:</strong><br>${r.ingredients.replace(/\n/g, "<br>")}</p>
           <p><strong>Steps:</strong><br>${r.steps.replace(/\n/g, "<br>")}</p>
           <textarea placeholder="Notes..." oninput="saveNote(${i}, this.value)">${r.note}</textarea>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;">
             <button onclick="editRecipe(${i})">Edit</button>
             <button onclick="deleteRecipe(${i})" class="danger">Delete</button>
+            <div class="share-dropdown" style="position:relative;">
+              <button type="button" class="share-btn" data-index="${i}">Share &#x1F517;</button>
+              <div class="share-menu" style="display:none;position:absolute;z-index:20;top:120%;left:0;background:#fff;border:1.5px solid #e0b4b4;border-radius:7px;box-shadow:0 2px 12px rgba(178,34,34,0.11);min-width:120px;">
+                <div class="share-menu-item" data-action="copy" data-index="${i}" style="padding:8px 14px;cursor:pointer;">Copy to Local</div>
+                <div class="share-menu-item" data-action="qr" data-index="${i}" style="padding:8px 14px;cursor:pointer;">QR Code</div>
+              </div>
+            </div>
           </div>
         `;
         recipeList.appendChild(card);
       });
+      // Setup share dropdowns
+      recipeList.querySelectorAll('.share-btn').forEach(btn => {
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          // Hide any other open menus
+          recipeList.querySelectorAll('.share-menu').forEach(menu => menu.style.display = 'none');
+          const menu = btn.parentElement.querySelector('.share-menu');
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        };
+      });
+      // Hide dropdown on click outside
+      document.addEventListener('click', function hideMenus(e) {
+        recipeList.querySelectorAll('.share-menu').forEach(menu => menu.style.display = 'none');
+        document.removeEventListener('click', hideMenus);
+      });
+      // Menu item actions
+      recipeList.querySelectorAll('.share-menu-item').forEach(item => {
+        item.onclick = function(e) {
+          const idx = +item.dataset.index;
+          const action = item.dataset.action;
+          if (action === 'copy') {
+            shareCopyToLocal(idx);
+          } else if (action === 'qr') {
+            shareShowQR(idx);
+          }
+          // Hide menu
+          item.closest('.share-menu').style.display = 'none';
+        };
+      });
     }
+    // --- Sharing logic ---
+    function recipeToURLString(recipe) {
+      // Encode as base64 JSON, then URI encode
+      const obj = {
+        title: recipe.title,
+        image: recipe.image,
+        tags: recipe.tags,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        note: recipe.note || ""
+      };
+      // Remove data URLs for sharing if too large
+      if (obj.image && obj.image.startsWith('data:') && obj.image.length > 512) {
+        obj.image = '';
+      }
+      const json = JSON.stringify(obj);
+      const b64 = btoa(unescape(encodeURIComponent(json)));
+      return `?import-recipe=${encodeURIComponent(b64)}`;
+    }
+
+    function urlStringToRecipe(str) {
+      try {
+        if (str.startsWith('?import-recipe=')) {
+          str = str.slice('?import-recipe='.length);
+        }
+        const b64 = decodeURIComponent(str);
+        const json = decodeURIComponent(escape(atob(b64)));
+        const obj = JSON.parse(json);
+        if (!obj.title) return null;
+        return obj;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function shareCopyToLocal(idx) {
+      const recipes = getRecipes();
+      const recipe = recipes[idx];
+      const urlPart = recipeToURLString(recipe);
+      const url = window.location.origin + window.location.pathname + urlPart;
+      // Copy URL to clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url);
+        alert("Recipe share link copied to clipboard!");
+      } else {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert("Recipe share link copied to clipboard!");
+      }
+    }
+
+    function shareShowQR(idx) {
+      const recipes = getRecipes();
+      const recipe = recipes[idx];
+      const urlPart = recipeToURLString(recipe);
+      const url = window.location.origin + window.location.pathname + urlPart;
+      // Show modal
+      const modal = document.getElementById('qr-modal');
+      const content = document.getElementById('qr-modal-content');
+      // Use qrserver.com for QR generation
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+      content.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="margin:16px 0 12px 0;border-radius:8px;border:1.5px solid #b22222;"><br>
+        <input type="text" readonly style="width:98%;font-size:0.95rem;padding:7px 6px;margin-bottom:7px;border-radius:7px;border:1.2px solid #e0b4b4;background:#fff7f7;color:#8b0000;text-align:center;" value="${url}"/>
+      `;
+      modal.style.display = 'flex';
+    }
+
+    // Modal close
+    document.addEventListener('DOMContentLoaded', function() {
+      const qrModal = document.getElementById('qr-modal');
+      const qrModalClose = document.getElementById('qr-modal-close');
+      if (qrModalClose) {
+        qrModalClose.onclick = function() {
+          qrModal.style.display = 'none';
+        };
+      }
+      qrModal.onclick = function(e) {
+        if (e.target === qrModal) qrModal.style.display = 'none';
+      };
+    });
+
+    // --- Import from URL ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check for import-recipe param
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('import-recipe')) {
+        const data = params.get('import-recipe');
+        const recipe = urlStringToRecipe(data);
+        if (recipe) {
+          // Add to local storage
+          const recipes = getRecipes();
+          // Prevent duplicates by title
+          if (!recipes.some(r => r.title === recipe.title)) {
+            recipes.push(recipe);
+            saveRecipes(recipes);
+            alert("Imported recipe: " + recipe.title);
+            renderRecipes();
+          }
+        }
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    // --- Export/Import All Recipes ---
+    document.addEventListener('DOMContentLoaded', function() {
+      const exportBtn = document.getElementById('export-btn');
+      const importBtn = document.getElementById('import-btn');
+      const importFile = document.getElementById('import-file');
+      exportBtn.onclick = function() {
+        const recipes = getRecipes();
+        const blob = new Blob([JSON.stringify(recipes, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recipes.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 200);
+      };
+      importBtn.onclick = function() {
+        importFile.value = '';
+        importFile.click();
+      };
+      importFile.onchange = function(e) {
+        const file = importFile.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (!Array.isArray(data)) throw new Error('Invalid file');
+            saveRecipes(data);
+            renderRecipes();
+            alert('Recipes imported!');
+          } catch (err) {
+            alert('Import failed: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+    });
 
     function addRecipe() {
       const title = document.getElementById('title').value.trim();
